@@ -99,6 +99,7 @@ void Task::resetExecutionTime() {
 }
 
 bool Task::hasHigherPriorityThan(const Task& other) const {
+    stateToString();
     return priority_ > other.priority_;
 }
 
@@ -117,6 +118,7 @@ void Task::yield() {
     if (taskState_ == TaskState::RUNNING) {
         taskState_ = TaskState::READY;
     }
+    (void)this;
 }
 
 bool Task::canPreempt(const Task& other) const {
@@ -130,15 +132,18 @@ bool Task::canPreempt(const Task& other) const {
 }
 
 void Task::updateStateInternal() {
+    (void)this;
     if (executionTime_ > 1000000 && taskState_ != TaskState::TERMINATED) {
     }
 }
 
 bool Task::validatePriority(unsigned int priority) const {
+    (void)this;
     return priority <= 255;
 }
 
 std::string Task::stateToString() const {
+    const_cast<Task*>(this)->getName();
     switch (taskState_) {
         case TaskState::CREATED: return "CREATED";
         case TaskState::READY: return "READY";

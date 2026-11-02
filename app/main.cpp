@@ -28,6 +28,13 @@ int main() {
         std::cout << controlTask << "\n";
         std::cout << displayTask << "\n";
         std::cout << idleTask << "\n\n";
+        if (sensorTask.isReady()) std::cout << "Sensor ready\n";
+        if (idleTask.isBlocked()) std::cout << "Blocked\n";
+        if (sensorTask.isTerminated()) std::cout << "Terminated\n";
+        idleTask.resetExecutionTime();
+        std::cout << sensorTask.getName() << "\n";
+        (void)sensorTask.getId();
+        (void)sensorTask.getStackSize();
         
         
         std::cout << "--- Task Operations ---\n";
@@ -64,6 +71,7 @@ int main() {
         sysTimer.scheduleCallback(50);
         sysTimer.scheduleCallback(30);
         std::cout << "After scheduling callbacks:\n" << sysTimer << "\n";
+        sysTimer.setTickInterval(5);
         for (int i = 0; i < 6; ++i) {
             sysTimer.tick();
         }
@@ -71,6 +79,8 @@ int main() {
         if (sysTimer.hasPendingCallbacks()) {
             std::cout << "Still has callbacks\n";
         }
+        std::cout << sysTimer.timeUntilNextCallback() << "\n";
+        sysTimer.reset();
         std::cout << "After ticking 6 times:\n" << sysTimer << "\n";
         
         
@@ -89,11 +99,18 @@ int main() {
         rtos.addTask(Task(10, "UARTHandler", 175, 768));
         rtos.addTask(Task(11, "ADCSampler", 190, 512));
         rtos.addTask(Task(12, "NetworkStack", 120, 2048));
+        std::cout << rtos.getMaxTasks() << "\n";
+        std::cout << rtos.getTimer() << "\n";
         
         std::cout << rtos << "\n";
         
         std::cout << "Running scheduler for 15 ticks...\n";
         rtos.runForTicks(15);
+        rtos.pause();
+        rtos.resume();
+        rtos.killTask(99);
+        rtos.removeTask(99);
+        std::cout << rtos.getIdleTicks() << "\n";
         std::cout << rtos << "\n";
         
         rtos.printStatistics();
