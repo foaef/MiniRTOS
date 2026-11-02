@@ -166,8 +166,8 @@ BikeDynamics::BikeDynamics(double massKg, double rollingResistance, double dragA
     }
 }
 
-void BikeDynamics::setRiderInput(double pedalPowerW, double gradientPct, bool braking) {
-    pedalPowerW_ = pedalPowerW;
+void BikeDynamics::setRiderInput(double pwr, double gradientPct, bool braking) {
+    pedalPowerW_ = pwr;
     gradientPct_ = gradientPct;
     braking_ = braking;
 }

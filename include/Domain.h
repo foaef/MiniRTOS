@@ -121,7 +121,7 @@ class BikeDynamics {
 
 public:
     BikeDynamics(double massKg, double rollingResistance, double dragArea, double brakeDecel, double initialSpeedKmh);
-    void setRiderInput(double pedalPowerW, double gradientPct, bool braking);
+    void setRiderInput(double pwr, double gradientPct, bool braking);
     void step(double dtSeconds, double motorPowerW);
     double speedKmh() const { return speedMs_ * 3.6; }
     double pedalPowerW() const { return pedalPowerW_; }
