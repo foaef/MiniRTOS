@@ -69,14 +69,16 @@ add_executable(${MAIN_EXECUTABLE_NAME}
 )
 target_sources(${MAIN_LIBRARY_NAME}
     PRIVATE
+        src/Battery.cpp
+        src/Config.cpp
+        src/ConfigLoader.cpp
+        src/EBike.cpp
+        src/EventLog.cpp
+        src/Motor.cpp
+        src/Scheduler.cpp
+        src/Task.cpp
         src/Example.cpp
         src/internal/Detail.cpp
-        src/Config.cpp
-        src/Trace.cpp
-        src/Domain.cpp
-        src/Kernel.cpp
-        src/EBike.cpp
-        src/Application.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
