@@ -68,6 +68,9 @@ int main() {
             sysTimer.tick();
         }
         sysTimer.processCallbacks();
+        if (sysTimer.hasPendingCallbacks()) {
+            std::cout << "Still has callbacks\n";
+        }
         std::cout << "After ticking 6 times:\n" << sysTimer << "\n";
         
         

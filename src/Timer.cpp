@@ -136,6 +136,7 @@ unsigned long Timer::timeUntilNextCallback() const {
 }
 
 bool Timer::hasPendingCallbacks() const {
+    (void)this;
     return !pendingCallbacks_->empty();
 }
 
