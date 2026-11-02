@@ -1,0 +1,77 @@
+# E-bike RTOS configuration. Durations are in kernel ticks (1 tick = 1 ms at 1000 Hz).
+
+# ---- kernel ----
+kernel.tick_hz = 1000
+kernel.trace_capacity = 128
+kernel.watchdog_timeout = 40
+
+# ---- simulation ----
+sim.duration = 10000
+sim.seed = 20260611
+sim.report_trace_lines = 12
+
+# ---- battery (13S pack) ----
+battery.cells_series = 13
+battery.capacity_mah = 14000
+battery.cell_full_v = 4.2
+battery.cell_empty_v = 3.1
+battery.internal_resistance_ohm = 0.12
+battery.initial_soc = 0.2001
+battery.low_soc = 0.2
+battery.critical_soc = 0.05
+battery.low_power_factor = 0.5
+battery.default_wh_per_km = 8.0
+
+# ---- motor ----
+motor.max_power_w = 250
+motor.cutoff_kmh = 25
+motor.fade_kmh = 3
+motor.derate_start_c = 70
+motor.limit_c = 90
+motor.heat_rate_c_per_s = 0.05
+motor.cool_rate_per_s = 0.001
+motor.response_per_s = 8
+motor.pid_kp = 0.004
+motor.pid_ki = 0.02
+motor.pid_kd = 0.0
+env.ambient_c = 22
+
+# ---- bike, rider and route ----
+bike.mass_kg = 105
+bike.rolling_resistance = 0.006
+bike.drag_area_m2 = 0.5
+bike.brake_decel_ms2 = 2.5
+bike.initial_speed_kmh = 15
+rider.base_power_w = 110
+rider.power_swing_w = 60
+rider.power_period = 4000
+route.gradient_pct = 2
+route.gradient_period = 7000
+rider.brake_every = 3500
+rider.brake_duration = 250
+
+# ---- sensors, display ----
+sensor.speed_noise_kmh = 0.1
+sensor.power_noise_w = 4
+sensor.voltage_noise_v = 0.05
+display.alert_ticks = 2000
+
+# ---- assist: share of rider power added by the motor ----
+assist.off = 0
+assist.eco = 0.5
+assist.tour = 1.0
+assist.sport = 1.8
+assist.turbo = 2.5
+assist.initial = 1
+
+# ---- tasks: name type priority period wcet deadline uses_bus ----
+task brake_monitor   brake_monitor   7    5   1    5   0
+task sensor_poll     sensor_poll     6   10   1    8   1
+task motor_control   motor_control   5   20   2   15   0
+task battery_monitor battery_monitor 3  100   3  100   0
+task display_update  display_update  2  100   4  100   1
+task telemetry       telemetry       1 1000   8 1000   0
+
+# ---- software timers: name period action ----
+timer assist_cycle 2500 cycle_assist
+timer heartbeat      10 feed_watchdog

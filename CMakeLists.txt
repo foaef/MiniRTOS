@@ -71,10 +71,12 @@ target_sources(${MAIN_LIBRARY_NAME}
     PRIVATE
         src/Example.cpp
         src/internal/Detail.cpp
-        src/Task.cpp
-        src/TaskQueue.cpp
-        src/Timer.cpp
-        src/Scheduler.cpp
+        src/Config.cpp
+        src/Trace.cpp
+        src/Domain.cpp
+        src/Kernel.cpp
+        src/EBike.cpp
+        src/Application.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
