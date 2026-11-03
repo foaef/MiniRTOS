@@ -86,6 +86,7 @@ target_sources(${MAIN_LIBRARY_NAME}
         src/Motor.cpp
         src/ReadSensorsAction.cpp
         src/Scheduler.cpp
+        src/SchedulabilityAnalysis.cpp
         src/Task.cpp
         src/TaskAction.cpp
         src/Example.cpp

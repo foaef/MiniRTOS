@@ -1,5 +1,6 @@
 #include "Task.hpp"
 
+#include <algorithm>
 #include <ostream>
 
 #include "ActionFactory.hpp"
@@ -21,6 +22,7 @@ Task::Task(const std::string& name, const std::string& type, int priority, int p
 void Task::release(int now) {
     active_ = true;
     missed_ = false;
+    releasedAt_ = now;
     remaining_ = wcet_;
     jobDeadline_ = now + deadline_;
     nextRelease_ = nextRelease_ + period_;
@@ -50,9 +52,16 @@ void Task::runOneTick() {
 
 void Task::runAction(EBike& bike) const { action_->run(bike); }
 
+void Task::finish(int now) {
+    active_ = false;
+    const int response = now + 1 - releasedAt_;  // the job ends at the end of tick `now`
+    worstResponse_ = std::max(worstResponse_, response);
+}
+
 std::ostream& operator<<(std::ostream& os, const Task& task) {
     os << task.name_ << " (" << *task.action_ << ") priority=" << task.priority_
        << " period=" << task.period_ << " wcet=" << task.wcet_ << " deadline=" << task.deadline_
-       << " jobs=" << task.jobs_ << " missed=" << task.misses_ << " overruns=" << task.overruns_;
+       << " jobs=" << task.jobs_ << " missed=" << task.misses_ << " overruns=" << task.overruns_
+       << " worst_response=" << task.worstResponse_;
     return os;
 }

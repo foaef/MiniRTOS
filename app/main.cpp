@@ -3,7 +3,7 @@
  * (read sensors, control the motor, check the brake, check the battery) on a
  * simulated e-bike. 1 tick = 1 ms. Everything is read from assets/ebike_config.txt.
  *
- * stdin chooses what is printed: config, halfway, end (nothing valid = all three).
+ * stdin chooses what is printed: config, halfway, end, analysis (nothing valid = all three).
  */
 
 #include <filesystem>
@@ -19,6 +19,7 @@
 #include "EbikeError.hpp"
 #include "InputError.hpp"
 #include "Scheduler.hpp"
+#include "SchedulabilityAnalysis.hpp"
 
 namespace {
 
@@ -33,8 +34,8 @@ std::set<std::string> readCommands() {
             continue;
         }
         try {
-            if (command != "config" && command != "halfway" && command != "end") {
-                throw InputError("unknown command '" + command + "' (use: config, halfway, end)");
+            if (command != "config" && command != "halfway" && command != "end" && command != "analysis") {
+                throw InputError("unknown command '" + command + "' (use: config, halfway, end, analysis)");
             }
             commands.insert(command);
         } catch (const InputError& error) {
@@ -83,6 +84,10 @@ int main(int argc, char** argv) {
             std::cout << "At the end:\n" << scheduler << "\n" << bike << "\n\n"
                       << dashboard << "\n" << dashboard.render(bike.speedKmh(), bike.chargeLevel(), bike.motorPowerW())
                       << "\n";
+        }
+        if (all || commands.count("analysis") > 0) {
+            const SchedulabilityAnalysis analysis(scheduler.tasks());
+            std::cout << "Timing analysis (on paper, then checked against the simulation):\n" << analysis << "\n\n";
         }
         if (scheduler.totalMisses() > 0) {
             return 2;

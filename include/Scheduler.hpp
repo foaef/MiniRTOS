@@ -33,6 +33,8 @@ public:
 
     double cpuUsage() const;
 
+    const std::vector<Task>& tasks() const { return tasks_; }
+
     int totalMisses() const;
 
     friend std::ostream& operator<<(std::ostream& os, const Scheduler& scheduler);

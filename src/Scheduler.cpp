@@ -60,7 +60,7 @@ void Scheduler::tick(EBike& bike) {
         next->runOneTick();
         if (next->isFinished()) {
             next->runAction(bike);
-            next->finish();
+            next->finish(now_);
         }
     }
     now_++;
