@@ -13,7 +13,7 @@ public:
     Physics(double massKg, double rollingResistance, double dragArea, double gravity, double airDensity);
 
     // The speed is never taken below 1 m/s, so the force stays finite at a standstill.
-    double driveForce(double powerW, double speedMs) const;
+    static double driveForce(double powerW, double speedMs);
 
     double resistanceForce(double speedMs) const;
 

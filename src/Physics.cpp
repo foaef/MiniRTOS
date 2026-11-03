@@ -20,7 +20,7 @@ Physics::Physics(double massKg, double rollingResistance, double dragArea, doubl
     }
 }
 
-double Physics::driveForce(double powerW, double speedMs) const {
+double Physics::driveForce(double powerW, double speedMs){
     const double speed = std::max(speedMs, 1.0);
     return powerW / speed;
 }

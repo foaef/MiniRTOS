@@ -22,7 +22,7 @@
 
 namespace {
 
-// Reads all of stdin (the writer of a pipe must be able to finish), reporting wrong words.
+// Reads all of stdin (broke windows CI before because pipe problems), reporting wrong words.
 std::set<std::string> readCommands() {
     std::set<std::string> commands;
     std::string line;
