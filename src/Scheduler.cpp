@@ -61,7 +61,7 @@ void Scheduler::tick(EBike& bike) {
         // Step 4: one tick of CPU for the chosen task.
         next->runOneTick();
         if (next->isFinished()) {
-            bike.runJob(next->type());
+            next->runAction(bike);
             next->finish();
         }
     }

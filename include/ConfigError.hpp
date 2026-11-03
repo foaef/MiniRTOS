@@ -1,16 +1,13 @@
 #pragma once
 
-#include <ostream>
-#include <stdexcept>
 #include <string>
 
-// Thrown when the config file is missing, wrong, or has invalid values.
-class ConfigError : public std::runtime_error {
-public:
-    explicit ConfigError(const std::string& message) : std::runtime_error(message) {}
+#include "EbikeError.hpp"
 
-    friend std::ostream& operator<<(std::ostream& os, const ConfigError& error) {
-        os << "config error: " << error.what();
-        return os;
-    }
+// Thrown when the config file is missing, wrong, or has invalid values.
+class ConfigError : public EbikeError {
+public:
+    explicit ConfigError(const std::string& message) : EbikeError(message) {}
+
+    std::string category() const override { return "config"; }
 };

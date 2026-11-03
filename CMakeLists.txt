@@ -69,14 +69,20 @@ add_executable(${MAIN_EXECUTABLE_NAME}
 )
 target_sources(${MAIN_LIBRARY_NAME}
     PRIVATE
+        src/ActionFactory.cpp
         src/Battery.cpp
+        src/CheckBatteryAction.cpp
+        src/CheckBrakeAction.cpp
         src/Config.cpp
         src/ConfigLoader.cpp
+        src/ControlMotorAction.cpp
         src/EBike.cpp
         src/EventLog.cpp
         src/Motor.cpp
+        src/ReadSensorsAction.cpp
         src/Scheduler.cpp
         src/Task.cpp
+        src/TaskAction.cpp
         src/Example.cpp
         src/internal/Detail.cpp
 )

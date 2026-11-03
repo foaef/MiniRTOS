@@ -91,20 +91,6 @@ void EBike::physicsStep(int now) {
     battery_.discharge(motor_.powerW(), secondsPerTick_);
 }
 
-void EBike::runJob(const std::string& type) {
-    if (type == "read_sensors") {
-        readSensors();
-    } else if (type == "control_motor") {
-        controlMotor();
-    } else if (type == "check_brake") {
-        checkBrake();
-    } else if (type == "check_battery") {
-        checkBattery();
-    } else {
-        throw ConfigError("unknown task type '" + type + "'");
-    }
-}
-
 std::ostream& operator<<(std::ostream& os, const EBike& bike) {
     os << "EBike{" << std::fixed << std::setprecision(1) << bike.speedMs_ * 3.6 << " km/h, "
        << std::setprecision(3) << bike.distanceKm_ << " km, " << bike.battery_ << ", " << bike.motor_

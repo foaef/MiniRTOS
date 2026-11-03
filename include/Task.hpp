@@ -1,16 +1,23 @@
 #pragma once
 
 #include <iosfwd>
+#include <memory>
 #include <string>
+
+#include "TaskAction.hpp"
+
+class EBike;
 
 // One periodic task.
 //   period   = a new job is released every `period` ticks
 //   wcet     = how many ticks of CPU one job needs
 //   deadline = a job must be finished this many ticks after its release
+// The action (what to do when a job is done) never changes, so copies of a
+// task simply share it; no special copy code is needed.
 class Task {
     // fixed data, comes from the config file
     std::string name_;
-    std::string type_;  // tells EBike::runJob what this task does
+    std::shared_ptr<const TaskAction> action_;
     int priority_;
     int period_;
     int wcet_;
@@ -27,10 +34,10 @@ class Task {
     int overruns_ = 0;
 
 public:
+    // `type` is the task type from the config file; it selects the action.
     Task(const std::string& name, const std::string& type, int priority, int period, int wcet, int deadline);
 
     const std::string& name() const { return name_; }
-    const std::string& type() const { return type_; }
     int priority() const { return priority_; }
     bool isActive() const { return active_; }
     int misses() const { return misses_; }
@@ -50,8 +57,11 @@ public:
     // Returns true (only once per job) if the job is still unfinished after its deadline.
     bool checkDeadline(int now);
 
-    // Give the job one tick of CPU.
-    void runOneTick() { remaining_--; }
+    // Give the job one tick of CPU. Throws SimulationError if the job has no work left.
+    void runOneTick();
+
+    // Do the real work of the finished job (the derived action decides what that is).
+    void runAction(EBike& bike) const;
 
     // The job is done, the task sleeps until its next release.
     void finish() { active_ = false; }

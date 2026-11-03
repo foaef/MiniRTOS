@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iosfwd>
-#include <string>
 
 #include "Battery.hpp"
 #include "Config.hpp"
@@ -47,21 +46,17 @@ class EBike {
     // Length of one tick in seconds (the config gives ticks per second).
     static double tickLength(const Config& cfg);
 
-    // --- the four things a task can do ---
-    void readSensors();    // read_sensors
-    void controlMotor();   // control_motor
-    void checkBrake();     // check_brake
-    void checkBattery();   // check_battery
-
 public:
     explicit EBike(const Config& cfg);
 
+    // --- the four things a task can do (called by the TaskAction classes) ---
+    void readSensors();    // copy the real speed and brake state into the "sensed" values
+    void controlMotor();   // decide the motor power using only the sensed values
+    void checkBrake();     // look at the brake directly and cut the motor at once
+    void checkBattery();   // remember if the battery is low
+
     // The simulated world, called once per tick (it is NOT a task).
     void physicsStep(int now);
-
-    // Called by the scheduler when a job finishes: does the work of that task.
-    // `type` is the second word of the task line in the config file.
-    void runJob(const std::string& type);
 
     friend std::ostream& operator<<(std::ostream& os, const EBike& bike);
 };

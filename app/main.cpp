@@ -15,7 +15,7 @@
  *   config   - the loaded configuration
  *   halfway  - the scheduler snapshot taken halfway through the simulation
  *   end      - the scheduler and the bike at the end
- * With no input at all, everything is printed.
+ * With no valid input at all, everything is printed.
  */
 
 #include <filesystem>
@@ -25,15 +25,17 @@
 #include <string>
 
 #include "Config.hpp"
-#include "ConfigError.hpp"
 #include "ConfigLoader.hpp"
 #include "EBike.hpp"
+#include "EbikeError.hpp"
+#include "InputError.hpp"
 #include "Scheduler.hpp"
 
 namespace {
 
-// Reads stdin until it ends and returns the words that were typed.
+// Reads stdin until it ends and returns the valid words that were typed.
 // Reading to the end matters: whoever feeds the pipe must be able to finish writing.
+// A wrong word is reported and the next line is read.
 std::set<std::string> readCommands() {
     std::set<std::string> commands;
     std::string line;
@@ -43,10 +45,13 @@ std::set<std::string> readCommands() {
         if (!(words >> command)) {
             continue;  // empty line
         }
-        if (command == "config" || command == "halfway" || command == "end") {
+        try {
+            if (command != "config" && command != "halfway" && command != "end") {
+                throw InputError("unknown command '" + command + "' (use: config, halfway, end)");
+            }
             commands.insert(command);
-        } else {
-            std::cerr << "unknown command '" << command << "' (use: config, halfway, end)\n";
+        } catch (const InputError& error) {
+            std::cerr << error << "\n";
         }
     }
     return commands;
@@ -82,20 +87,20 @@ int main(int argc, char** argv) {
 
         const std::set<std::string> commands = readCommands();
         const bool all = commands.empty();
-        if (all || commands.count("config")) {
+        if (all || commands.count("config") > 0) {
             std::cout << loader << "\n" << config << "\n\n";
         }
-        if (all || commands.count("halfway")) {
+        if (all || commands.count("halfway") > 0) {
             std::cout << "At the halfway point:\n" << halfway << "\n\n";
         }
-        if (all || commands.count("end")) {
+        if (all || commands.count("end") > 0) {
             std::cout << "At the end:\n" << scheduler << "\n" << bike << "\n";
         }
         if (scheduler.totalMisses() > 0) {
             return 2;  // at least one task missed a deadline
         }
         return 0;
-    } catch (const ConfigError& error) {
+    } catch (const EbikeError& error) {
         std::cerr << error << "\n";
         return 1;
     } catch (const std::exception& error) {
