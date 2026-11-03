@@ -14,7 +14,6 @@ void Scheduler::releaseJobs() {
             continue;
         }
         if (task.isActive()) {
-            // the previous job is still not finished
             task.skipRelease();
             log_.add("t=" + std::to_string(now_) + " overrun: " + task.name());
         } else {
@@ -58,7 +57,6 @@ void Scheduler::tick(EBike& bike) {
         }
         running_ = next->name();
 
-        // Step 4: one tick of CPU for the chosen task.
         next->runOneTick();
         if (next->isFinished()) {
             next->runAction(bike);

@@ -7,7 +7,6 @@
 
 #include "Task.hpp"
 
-// All the data read from the config file: numbers by name, plus the tasks.
 class Config {
     std::map<std::string, double> values_;
     std::vector<Task> tasks_;
@@ -17,7 +16,6 @@ public:
 
     double number(const std::string& key) const;
 
-    // Same as number(), but for values that must be whole numbers (counts, ticks).
     int whole(const std::string& key) const;
 
     const std::vector<Task>& tasks() const { return tasks_; }

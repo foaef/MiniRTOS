@@ -4,9 +4,7 @@
 #include <stdexcept>
 #include <string>
 
-// Base of all the errors of this project. The derived classes only change the
-// category, so one catch block can handle every kind of error and still print
-// the right label (operator<< calls the virtual category()).
+// Base of all the errors of this project; the derived classes only change category().
 class EbikeError : public std::runtime_error {
 public:
     explicit EbikeError(const std::string& message) : std::runtime_error(message) {}

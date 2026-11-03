@@ -19,6 +19,11 @@ motor.cutoff_kmh = 25
 motor.fade_kmh = 3
 assist.ratio = 1.5
 
+# world and dashboard
+world.gravity = 9.81
+world.air_density = 1.2
+dashboard.bar_width = 10
+
 # bike and rider
 bike.mass_kg = 105
 bike.rolling_resistance = 0.006

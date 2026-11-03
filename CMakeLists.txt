@@ -70,6 +70,11 @@ add_executable(${MAIN_EXECUTABLE_NAME}
 target_sources(${MAIN_LIBRARY_NAME}
     PRIVATE
         src/ActionFactory.cpp
+        src/Brake.cpp
+        src/Dashboard.cpp
+        src/Physics.cpp
+        src/RideStats.cpp
+        src/Rider.cpp
         src/Battery.cpp
         src/CheckBatteryAction.cpp
         src/CheckBrakeAction.cpp
