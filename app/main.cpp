@@ -10,10 +10,18 @@
  * important task.
  *
  * Everything (bike parameters, task list) is read from assets/ebike_config.txt.
+ *
+ * Keyboard input (stdin), one word per line, chooses what is printed:
+ *   config   - the loaded configuration
+ *   halfway  - the scheduler snapshot taken halfway through the simulation
+ *   end      - the scheduler and the bike at the end
+ * With no input at all, everything is printed.
  */
 
 #include <filesystem>
 #include <iostream>
+#include <set>
+#include <sstream>
 #include <string>
 
 #include "Config.hpp"
@@ -21,6 +29,30 @@
 #include "ConfigLoader.hpp"
 #include "EBike.hpp"
 #include "Scheduler.hpp"
+
+namespace {
+
+// Reads stdin until it ends and returns the words that were typed.
+// Reading to the end matters: whoever feeds the pipe must be able to finish writing.
+std::set<std::string> readCommands() {
+    std::set<std::string> commands;
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        std::istringstream words(line);
+        std::string command;
+        if (!(words >> command)) {
+            continue;  // empty line
+        }
+        if (command == "config" || command == "halfway" || command == "end") {
+            commands.insert(command);
+        } else {
+            std::cerr << "unknown command '" << command << "' (use: config, halfway, end)\n";
+        }
+    }
+    return commands;
+}
+
+}  // namespace
 
 int main(int argc, char** argv) {
     try {
@@ -48,9 +80,17 @@ int main(int argc, char** argv) {
             }
         }
 
-        std::cout << loader << "\n" << config << "\n\n";
-        std::cout << "At the halfway point:\n" << halfway << "\n\n";
-        std::cout << "At the end:\n" << scheduler << "\n" << bike << "\n";
+        const std::set<std::string> commands = readCommands();
+        const bool all = commands.empty();
+        if (all || commands.count("config")) {
+            std::cout << loader << "\n" << config << "\n\n";
+        }
+        if (all || commands.count("halfway")) {
+            std::cout << "At the halfway point:\n" << halfway << "\n\n";
+        }
+        if (all || commands.count("end")) {
+            std::cout << "At the end:\n" << scheduler << "\n" << bike << "\n";
+        }
         if (scheduler.totalMisses() > 0) {
             return 2;  // at least one task missed a deadline
         }

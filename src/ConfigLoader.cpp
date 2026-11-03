@@ -1,12 +1,17 @@
 #include "ConfigLoader.hpp"
 
 #include <fstream>
+#include <map>
 #include <ostream>
+#include <sstream>
 #include <vector>
 
 #include "ConfigError.hpp"
 
-void ConfigLoader::readValue(const std::string& line, std::map<std::string, double>& values) {
+namespace {
+
+// Handles a line like "motor.max_power_w = 250".
+void readValue(const std::string& line, std::map<std::string, double>& values) {
     const std::size_t equals = line.find('=');
     if (equals == std::string::npos) {
         throw ConfigError("expected 'key = value', got '" + line + "'");
@@ -21,7 +26,9 @@ void ConfigLoader::readValue(const std::string& line, std::map<std::string, doub
     values[key] = value;
 }
 
-Task ConfigLoader::readTask(std::istringstream& words) {
+// Handles a line like "task brake_monitor check_brake 4 5 1 5".
+// The word "task" was already read, so `words` continues after it.
+Task readTask(std::istringstream& words) {
     std::string name;
     std::string type;
     int priority = 0;
@@ -33,6 +40,8 @@ Task ConfigLoader::readTask(std::istringstream& words) {
     }
     return Task(name, type, priority, period, wcet, deadline);
 }
+
+}  // namespace
 
 ConfigLoader::ConfigLoader(const std::string& path) : path_(path) {
     if (path_.empty()) {
@@ -49,7 +58,10 @@ Config ConfigLoader::load() const {
     std::vector<Task> tasks;
     std::string line;
     while (std::getline(file, line)) {
-        line = line.substr(0, line.find('#'));  // remove the comment
+        const std::size_t comment = line.find('#');
+        if (comment != std::string::npos) {
+            line.resize(comment);  // remove the comment
+        }
         std::istringstream words(line);
         std::string firstWord;
         if (!(words >> firstWord)) {
