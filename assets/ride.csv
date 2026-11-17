@@ -1,0 +1,7 @@
+# start_ms, rider_power_w, throttle (0..1), brake (1 = held), slope_percent
+0,      80, 1.0, 0,  0    # start from rest with full assist
+6000,  120, 0.6, 0,  4    # climb
+10000,   0, 0.0, 1,  0    # brake for a crossing
+11500,  90, 0.8, 0,  0
+15000, 100, 1.0, 0, -5    # downhill: assist fades out at the speed limit
+18000,   0, 0.0, 1,  0    # brake to a stop

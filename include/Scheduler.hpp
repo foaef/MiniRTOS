@@ -1,41 +1,52 @@
 #pragma once
 
+#include <cstddef>
 #include <iosfwd>
-#include <string>
+#include <memory>
 #include <vector>
 
-#include "EventLog.hpp"
 #include "Task.hpp"
+#include "TraceLog.hpp"
 
-class EBike;
+class Hal;
+class VehicleState;
 
-// Fixed-priority preemptive scheduler. In every tick it does 4 things:
+// Fixed-priority preemptive scheduler. Every tick it:
 //   1. releases the jobs whose time has come
-//   2. checks if any job missed its deadline
-//   3. picks the active task with the highest priority
-//   4. gives that task 1 tick of CPU; if that was its last tick, the real work is done
+//   2. checks deadlines (a late task gets a chance to react, e.g. cut the motor)
+//   3. gives 1 tick of CPU to the active task with the highest priority
+// Preemption needs no extra code: a more important task released in the meantime
+// simply wins the next pick, and the interrupted job continues later.
 class Scheduler {
-    std::vector<Task> tasks_;
-    EventLog log_;
+    std::vector<std::unique_ptr<Task>> tasks_;
+    TraceLog trace_;
     int now_ = 0;
     int idleTicks_ = 0;
-    int switches_ = 0;
-    std::string running_;
+    int switches_ = 0;     // how often the running task changed
+    int lastRunning_ = -1;
 
-    void releaseJobs();
-    void checkDeadlines();
-    Task* pickNext();
+    int pickNext() const;  // index of the task to run, -1 if none is active
 
 public:
-    Scheduler(const std::vector<Task>& tasks, int logCapacity);
+    explicit Scheduler(std::size_t traceCapacity);
+    Scheduler(const Scheduler& other);
+    Scheduler& operator=(Scheduler other);
+    ~Scheduler() = default;
 
-    void tick(EBike& bike);
+    // Throws SchedulingError when the name or the priority is already used.
+    void addTask(std::unique_ptr<Task> task);
 
-    double cpuUsage() const;
+    void tick(Hal& hal, VehicleState& state);
 
-    const std::vector<Task>& tasks() const { return tasks_; }
+    // Worst response time of each task, worked out on paper (response time analysis):
+    //   R = wcet + sum over more important tasks of ceil(R / their period) * their wcet,
+    // repeated until R stops changing. Stops early once R passes the deadline.
+    std::vector<int> responseTimeBounds() const;
+    bool isSchedulable() const;  // every bound fits its deadline
 
+    double cpuLoad() const;
     int totalMisses() const;
 
+    friend void swap(Scheduler& first, Scheduler& second) noexcept;
     friend std::ostream& operator<<(std::ostream& os, const Scheduler& scheduler);
 };

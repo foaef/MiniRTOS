@@ -69,26 +69,20 @@ add_executable(${MAIN_EXECUTABLE_NAME}
 )
 target_sources(${MAIN_LIBRARY_NAME}
     PRIVATE
-        src/ActionFactory.cpp
-        src/Brake.cpp
-        src/Dashboard.cpp
-        src/Physics.cpp
-        src/RideStats.cpp
-        src/Rider.cpp
-        src/Battery.cpp
-        src/CheckBatteryAction.cpp
-        src/CheckBrakeAction.cpp
+        src/AssistTask.cpp
+        src/BatteryTask.cpp
+        src/BrakeTask.cpp
         src/Config.cpp
-        src/ConfigLoader.cpp
-        src/ControlMotorAction.cpp
-        src/EBike.cpp
-        src/EventLog.cpp
-        src/Motor.cpp
-        src/ReadSensorsAction.cpp
+        src/Hal.cpp
+        src/Ride.cpp
         src/Scheduler.cpp
-        src/SchedulabilityAnalysis.cpp
+        src/SensorTask.cpp
+        src/SimHal.cpp
         src/Task.cpp
-        src/TaskAction.cpp
+        src/TaskFactory.cpp
+        src/TaskSpec.cpp
+        src/TraceLog.cpp
+        src/VehicleState.cpp
         src/Example.cpp
         src/internal/Detail.cpp
 )

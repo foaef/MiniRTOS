@@ -2,66 +2,49 @@
 
 #include <algorithm>
 #include <ostream>
+#include <utility>
 
-#include "ActionFactory.hpp"
-#include "ConfigError.hpp"
-#include "SimulationError.hpp"
+Task::Task(TaskSpec spec) : spec_(std::move(spec)) {}
 
-Task::Task(const std::string& name, const std::string& type, int priority, int period, int wcet, int deadline)
-    : name_(name),
-      action_(makeAction(type)),
-      priority_(priority),
-      period_(period),
-      wcet_(wcet),
-      deadline_(deadline) {
-    if (period_ <= 0 || wcet_ <= 0 || wcet_ > deadline_ || deadline_ > period_) {
-        throw ConfigError("task '" + name_ + "': need 0 < wcet <= deadline <= period");
+void Task::onDeadlineMiss(Hal& /*hal*/, VehicleState& /*state*/) {}
+
+void Task::releaseIfDue(int now) {
+    if (now < nextRelease_) {
+        return;
     }
-}
-
-void Task::release(int now) {
+    nextRelease_ += spec_.period();
+    if (active_) {
+        overruns_++;  // the previous job is still not done: skip this release
+        return;
+    }
     active_ = true;
     missed_ = false;
+    remaining_ = spec_.wcet();
     releasedAt_ = now;
-    remaining_ = wcet_;
-    jobDeadline_ = now + deadline_;
-    nextRelease_ = nextRelease_ + period_;
     jobs_++;
 }
 
-void Task::skipRelease() {
-    nextRelease_ = nextRelease_ + period_;
-    overruns_++;
-}
-
-bool Task::checkDeadline(int now) {
-    if (active_ && !missed_ && now >= jobDeadline_) {
+void Task::checkDeadline(int now, Hal& hal, VehicleState& state) {
+    if (active_ && !missed_ && now >= releasedAt_ + spec_.deadline()) {
         missed_ = true;
         misses_++;
-        return true;
+        onDeadlineMiss(hal, state);
     }
-    return false;
 }
 
-void Task::runOneTick() {
-    if (remaining_ <= 0) {
-        throw SimulationError("task '" + name_ + "' has no work left to run");
-    }
+void Task::runOneTick(int now, Hal& hal, VehicleState& state) {
     remaining_--;
-}
-
-void Task::runAction(EBike& bike) const { action_->run(bike); }
-
-void Task::finish(int now) {
+    if (remaining_ > 0) {
+        return;
+    }
     active_ = false;
-    const int response = now + 1 - releasedAt_;  // the job ends at the end of tick `now`
-    worstResponse_ = std::max(worstResponse_, response);
+    worstResponse_ = std::max(worstResponse_, now + 1 - releasedAt_);
+    execute(hal, state);
 }
 
 std::ostream& operator<<(std::ostream& os, const Task& task) {
-    os << task.name_ << " (" << *task.action_ << ") priority=" << task.priority_
-       << " period=" << task.period_ << " wcet=" << task.wcet_ << " deadline=" << task.deadline_
-       << " jobs=" << task.jobs_ << " missed=" << task.misses_ << " overruns=" << task.overruns_
-       << " worst_response=" << task.worstResponse_;
+    os << task.spec_ << "\n    jobs=" << task.jobs_ << " missed=" << task.misses_ << " overruns=" << task.overruns_
+       << " worst response=" << task.worstResponse_ << " | ";
+    task.printSettings(os);
     return os;
 }

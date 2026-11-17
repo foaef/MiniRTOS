@@ -1,51 +1,19 @@
-/*
- * Small e-bike RTOS simulation: a fixed-priority scheduler runs periodic tasks
- * (read sensors, control the motor, check the brake, check the battery) on a
- * simulated e-bike. 1 tick = 1 ms. Everything is read from assets/ebike_config.txt.
- *
- * stdin chooses what is printed: config, halfway, end, analysis (nothing valid = all three).
- */
+// MiniRTOS: a fixed-priority real-time scheduler running e-bike firmware tasks.
+// On the PC the bike is simulated (SimHal); on the Pico 2 a PicoHal will take its place.
+//
+// Data files: assets/ebike_config.txt (bike, battery, assist, tasks) and the ride file it names.
+// 1 tick = 1 ms.
 
 #include <filesystem>
 #include <iostream>
-#include <set>
-#include <sstream>
 #include <string>
 
 #include "Config.hpp"
-#include "ConfigLoader.hpp"
-#include "Dashboard.hpp"
-#include "EBike.hpp"
-#include "EbikeError.hpp"
-#include "InputError.hpp"
+#include "Errors.hpp"
 #include "Scheduler.hpp"
-#include "SchedulabilityAnalysis.hpp"
-
-namespace {
-
-// Reads all of stdin (broke windows CI before because pipe problems), reporting wrong words.
-std::set<std::string> readCommands() {
-    std::set<std::string> commands;
-    std::string line;
-    while (std::getline(std::cin, line)) {
-        std::istringstream words(line);
-        std::string command;
-        if (!(words >> command)) {
-            continue;
-        }
-        try {
-            if (command != "config" && command != "halfway" && command != "end" && command != "analysis") {
-                throw InputError("unknown command '" + command + "' (use: config, halfway, end, analysis)");
-            }
-            commands.insert(command);
-        } catch (const InputError& error) {
-            std::cerr << error << "\n";
-        }
-    }
-    return commands;
-}
-
-}  // namespace
+#include "SimHal.hpp"
+#include "TaskFactory.hpp"
+#include "VehicleState.hpp"
 
 int main(int argc, char** argv) {
     try {
@@ -53,51 +21,52 @@ int main(int argc, char** argv) {
         if (argc > 1) {
             path = argv[1];
         } else if (!std::filesystem::exists(path)) {
-            path = "../assets/ebike_config.txt";
+            path = "../assets/ebike_config.txt";  // when started from the build folder
         }
 
-        const ConfigLoader loader(path);
-        const Config config = loader.load();
-        EBike bike(config);
-        Scheduler scheduler(config.tasks(), config.whole("log.capacity"));
-        const Dashboard dashboard(config.whole("dashboard.bar_width"));
-        Scheduler halfway = scheduler;  // copy constructor
+        const Config config(path);
+        std::cout << config << "\n\n";
 
-        const int duration = config.whole("sim.duration");
+        SimHal bike(config);
+        VehicleState state(bike.wheelSpeedKmh(), 100);
+        Scheduler scheduler(config.whole("trace.capacity"));
+        for (const TaskSpec& spec : config.tasks()) {
+            scheduler.addTask(makeTask(spec, config));
+        }
+
+        // Check on paper before running: can every task always meet its deadline?
+        std::cout << "Response time analysis: the task set is "
+                  << (scheduler.isSchedulable() ? "schedulable" : "NOT schedulable") << " (bounds:";
+        for (const int bound : scheduler.responseTimeBounds()) {
+            std::cout << ' ' << bound;
+        }
+        std::cout << " ticks)\n\n";
+
+        // Run the ride; keep a snapshot of the scheduler halfway (copy and assignment).
+        const int duration = config.whole("sim.duration_ms");
+        Scheduler halfway = scheduler;
         for (int now = 0; now < duration; now++) {
-            bike.physicsStep(now);
-            scheduler.tick(bike);
+            bike.step(now);               // the world moves
+            scheduler.tick(bike, state);  // the CPU runs one task for one tick
             if (now == duration / 2) {
-                halfway = scheduler;  // copy assignment
+                halfway = scheduler;
             }
         }
 
-        const std::set<std::string> commands = readCommands();
-        const bool all = commands.empty();
-        if (all || commands.count("config") > 0) {
-            std::cout << loader << "\n" << config << "\n\n";
-        }
-        if (all || commands.count("halfway") > 0) {
-            std::cout << "At the halfway point:\n" << halfway << "\n\n";
-        }
-        if (all || commands.count("end") > 0) {
-            std::cout << "At the end:\n" << scheduler << "\n" << bike << "\n\n"
-                      << dashboard << "\n" << dashboard.render(bike.speedKmh(), bike.chargeLevel(), bike.motorPowerW())
-                      << "\n";
-        }
-        if (all || commands.count("analysis") > 0) {
-            const SchedulabilityAnalysis analysis(scheduler.tasks());
-            std::cout << "Timing analysis (on paper, then checked against the simulation):\n" << analysis << "\n\n";
-        }
-        if (scheduler.totalMisses() > 0) {
-            return 2;
-        }
-        return 0;
-    } catch (const EbikeError& error) {
-        std::cerr << error << "\n";
+        std::cout << "Halfway:\n" << halfway << "\n\nEnd of the ride:\n" << scheduler << "\n\n";
+        std::cout << state << "\n" << bike << "\n";
+        std::cout << "\nSafety: worst time from brake press to motor off = " << bike.worstBrakeReactionMs()
+                  << " ms, missed deadlines = " << scheduler.totalMisses() << "\n";
+        return scheduler.totalMisses() == 0 ? 0 : 2;
+    } catch (const ConfigError& error) {
+        std::cerr << "config error: " << error.what() << "\n";
         return 1;
-    } catch (const std::exception& error) {
-        std::cerr << "error: " << error.what() << "\n";
+    } catch (const SchedulingError& error) {
+        std::cerr << "scheduling error: " << error.what() << "\n";
         return 1;
+    } catch (const HardwareError& error) {
+        // a firmware bug: on the real bike this is where the watchdog would cut the motor
+        std::cerr << "hardware error: " << error.what() << "\n";
+        return 3;
     }
 }

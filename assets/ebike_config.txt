@@ -1,41 +1,36 @@
-# E-bike configuration. Durations are in ticks (1 tick = 1 ms at 1000 Hz).
+# MiniRTOS e-bike configuration. Times are in ticks, 1 tick = 1 ms.
 
-kernel.tick_hz = 1000
-sim.duration = 10000
-log.capacity = 20
+sim.duration_ms = 20000
+trace.capacity = 40
+ride.file = assets/ride.csv
 
-# battery 
-battery.cells = 13
-battery.capacity_mah = 14000
-battery.cell_full_v = 4.2
-battery.cell_empty_v = 3.1
-battery.initial_charge = 0.85
-battery.low_level = 0.2
-battery.low_power_factor = 0.5
-
-# motor
-motor.max_power_w = 250
-motor.cutoff_kmh = 25
-motor.fade_kmh = 3
-assist.ratio = 1.5
-
-# world and dashboard
-world.gravity = 9.81
-world.air_density = 1.2
-dashboard.bar_width = 10
-
-# bike and rider
+# bike (used only by the simulator)
 bike.mass_kg = 105
 bike.rolling_resistance = 0.006
 bike.drag_area_m2 = 0.5
 bike.brake_decel_ms2 = 2.5
-bike.initial_speed_kmh = 15
-rider.power_w = 110
-rider.brake_every = 3500
-rider.brake_duration = 250
+bike.initial_speed_kmh = 0
+motor.rated_power_w = 250
+
+# battery: 13 cells in series (48 V nominal)
+battery.cells = 13
+battery.cell_empty_v = 3.1
+battery.cell_full_v = 4.2
+battery.capacity_ah = 14
+battery.initial_charge = 0.85
+battery.low_percent = 20
+
+# firmware settings
+sensor.filter = 0.5
+assist.max_power_w = 250
+assist.cutoff_kmh = 25
+assist.fade_kmh = 3
+assist.ramp_w = 10
+assist.low_battery_factor = 0.5
 
 # tasks: name type priority period wcet deadline
-task brake_monitor   check_brake    4    5  1    5
-task sensor_poll     read_sensors   3   10  1    8
-task motor_control   control_motor  2   20  2   15
-task battery_monitor check_battery  1  100  3  100
+# every task needs its own name and priority; higher number = more important
+task brake    brake    4    5  1    5
+task sensors  sensors  3   10  1    8
+task assist   assist   2   20  2   15
+task battery  battery  1  100  3  100

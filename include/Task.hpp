@@ -4,55 +4,51 @@
 #include <memory>
 #include <string>
 
-#include "TaskAction.hpp"
+#include "TaskSpec.hpp"
 
-class EBike;
+class Hal;
+class VehicleState;
 
-//   period   = a new job is released every `period` ticks
-//   wcet     = how many ticks of CPU one job needs
-//   deadline = a job must be finished this many ticks after its release
-// Copies of a task share its (unchanging) action, so no special copy code is needed.
+// A periodic task. The kernel part (releases, CPU ticks, deadlines) is the same for
+// every task and lives here; what a task actually does is in the derived classes.
+// A job does its work in the tick it completes, so its output is at most `deadline`
+// ticks late, which is exactly what the deadline promises.
 class Task {
-    std::string name_;
-    std::shared_ptr<const TaskAction> action_;
-    int priority_;
-    int period_;
-    int wcet_;
-    int deadline_;
-
+    TaskSpec spec_;
     int nextRelease_ = 0;
     int releasedAt_ = 0;
-    int worstResponse_ = 0;
-    int jobDeadline_ = 0;
-    int remaining_ = 0;
+    int remaining_ = 0;  // CPU ticks the current job still needs
     bool active_ = false;
-    bool missed_ = false;
+    bool missed_ = false;  // the current job already missed its deadline
     int jobs_ = 0;
     int misses_ = 0;
-    int overruns_ = 0;
+    int overruns_ = 0;  // releases skipped because the previous job was still running
+    int worstResponse_ = 0;
+
+    // What the task does when a job finishes.
+    virtual void execute(Hal& hal, VehicleState& state) = 0;
+    // What the task does when a job misses its deadline (default: nothing).
+    virtual void onDeadlineMiss(Hal& hal, VehicleState& state);
+    // Extra lines for operator<< (the task's own settings).
+    virtual void printSettings(std::ostream& os) const = 0;
+
+protected:
+    explicit Task(TaskSpec spec);
+    Task(const Task&) = default;
+    Task& operator=(const Task&) = default;
 
 public:
-    Task(const std::string& name, const std::string& type, int priority, int period, int wcet, int deadline);
+    virtual ~Task() = default;
+    virtual std::unique_ptr<Task> clone() const = 0;
 
-    const std::string& name() const { return name_; }
-    int priority() const { return priority_; }
-    int period() const { return period_; }
-    int wcet() const { return wcet_; }
-    int deadline() const { return deadline_; }
-
-    // Longest time from release to completion of any finished job (0 = none finished yet).
-    int worstResponse() const { return worstResponse_; }
+    const TaskSpec& spec() const { return spec_; }
     bool isActive() const { return active_; }
     int misses() const { return misses_; }
-    bool isDue(int now) const { return now >= nextRelease_; }
-    bool isFinished() const { return active_ && remaining_ == 0; }
-    void release(int now);
-    void skipRelease();
-    bool checkDeadline(int now);
-    void runOneTick();
-    void runAction(EBike& bike) const;
-    // The job is done. `now` is the tick in which its last CPU tick ran.
-    void finish(int now);
+
+    // Kernel side, called by the scheduler once per tick.
+    void releaseIfDue(int now);
+    void checkDeadline(int now, Hal& hal, VehicleState& state);
+    void runOneTick(int now, Hal& hal, VehicleState& state);
 
     friend std::ostream& operator<<(std::ostream& os, const Task& task);
 };
