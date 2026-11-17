@@ -15,7 +15,10 @@ public:
     Hal& operator=(const Hal&) = delete;
 
     virtual bool brakePressed() const = 0;
-    virtual double throttle() const = 0;  // 0..1
+    // Raw throttle signal in volts. A hall throttle gives about 0.8 V at rest and 4.2 V fully
+    // twisted; anything far outside that range means a broken wire or a short.
+    virtual double throttleVoltage() const = 0;
+    virtual double pedalCadenceRpm() const = 0;  // from the pedal assist sensor (PAS)
     virtual double wheelSpeedKmh() const = 0;
     virtual double packVoltage() const = 0;
     virtual void setMotorPower(double watts) = 0;

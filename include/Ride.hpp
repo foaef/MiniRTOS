@@ -4,22 +4,36 @@
 #include <string>
 #include <vector>
 
-// What the rider and the road do from `startMs` until the next step starts.
+
+// A broken sensor, injected by the ride file to test the firmware's fault detection.
+enum class SensorFault { NONE, SPEED_LOST, THROTTLE_SHORTED };
+
+std::ostream& operator<<(std::ostream& os, SensorFault fault);
+
+// What the rider, the road and the sensors do from `startMs` until the next step starts.
 class RideStep {
     int startMs_;
     double riderPowerW_;   // how hard the rider pedals
-    double throttle_;      // 0 = no assist wanted, 1 = full assist
+    double cadenceRpm_;    // pedal turns per minute (0 = not pedalling)
+    double throttle_;      // 0..1, how far the throttle is twisted
     bool brake_;           // the rider holds the brake lever
     double slopePercent_;  // > 0 uphill, < 0 downhill
+    SensorFault fault_;
 
 public:
-    RideStep(int startMs, double riderPowerW, double throttle, bool brake, double slopePercent);
+    RideStep(int startMs, double riderPowerW, double cadenceRpm, double throttle, bool brake, double slopePercent,
+             SensorFault fault);
+
+    // "ok", "speed_lost" or "throttle_shorted"
+    static SensorFault faultFromText(const std::string& text);
 
     int startMs() const { return startMs_; }
     double riderPowerW() const { return riderPowerW_; }
+    double cadenceRpm() const { return cadenceRpm_; }
     double throttle() const { return throttle_; }
     bool brake() const { return brake_; }
     double slopePercent() const { return slopePercent_; }
+    SensorFault fault() const { return fault_; }
 
     friend std::ostream& operator<<(std::ostream& os, const RideStep& step);
 };

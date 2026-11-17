@@ -6,9 +6,16 @@
 VehicleState::VehicleState(double speedKmh, double chargePercent)
     : speedKmh_(speedKmh), chargePercent_(chargePercent) {}
 
-void VehicleState::updateMotion(double measuredSpeedKmh, double measuredThrottle) {
+void VehicleState::updateMotion(double measuredSpeedKmh, double measuredThrottle, double measuredCadenceRpm) {
     speedKmh_ = measuredSpeedKmh;
     throttle_ = measuredThrottle;
+    cadenceRpm_ = measuredCadenceRpm;
+}
+
+void VehicleState::reportFault(const std::string& reason) {
+    if (fault_.empty()) {
+        fault_ = reason;
+    }
 }
 
 void VehicleState::updateBrake(bool pressed) {
@@ -25,9 +32,9 @@ void VehicleState::updateBattery(double chargePercent, bool low) {
 
 std::ostream& operator<<(std::ostream& os, const VehicleState& state) {
     os << "VehicleState{" << std::fixed << std::setprecision(1) << state.speedKmh_ << " km/h, throttle "
-       << state.throttle_ << ", " << (state.braking_ ? "braking" : "not braking") << ", battery "
+       << state.throttle_ << ", pedalling " << state.cadenceRpm_ << " rpm, " << (state.braking_ ? "braking" : "not braking") << ", battery "
        << state.chargePercent_ << "%" << (state.lowBattery_ ? " (LOW)" : "") << ", motor " << state.motorPowerW_
-       << " W, " << state.brakePresses_ << " brake presses}";
+       << " W, " << state.brakePresses_ << " brake presses, sensors "
+       << (state.fault_.empty() ? "ok" : "FAULT: " + state.fault_) << "}";
     return os;
 }
-

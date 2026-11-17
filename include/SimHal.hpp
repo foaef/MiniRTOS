@@ -7,7 +7,7 @@
 #include "Ride.hpp"
 
 // The simulated bike: rider, road, physics and battery, driven by a recorded ride.
-// It also measures how safely the firmware behaved (motor still pushing while braking).
+// The ride can also break a sensor on purpose. It measures how safely the firmware behaved (motor still pushing while braking).
 class SimHal final : public Hal {
     Ride ride_;
     double massKg_;
@@ -19,12 +19,16 @@ class SimHal final : public Hal {
     double cellEmptyV_;
     double cellFullV_;
     double capacityAh_;
+    double throttleMinV_;
+    double throttleMaxV_;
 
     double chargeAh_;
     double speedMs_;
     double motorPowerW_ = 0;
     bool brake_ = false;
     double throttle_ = 0;
+    double cadenceRpm_ = 0;
+    SensorFault fault_ = SensorFault::NONE;
 
     double distanceKm_ = 0;
     double maxSpeedKmh_ = 0;
@@ -44,7 +48,8 @@ public:
     int worstBrakeReactionMs() const { return worstUnsafeRun_; }
 
     bool brakePressed() const override { return brake_; }
-    double throttle() const override { return throttle_; }
+    double throttleVoltage() const override;
+    double pedalCadenceRpm() const override { return cadenceRpm_; }
     double wheelSpeedKmh() const override;
     double packVoltage() const override;
     void setMotorPower(double watts) override;

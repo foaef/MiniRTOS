@@ -17,12 +17,7 @@
 
 int main(int argc, char** argv) {
     try {
-        std::string path = "assets/ebike_config.txt";
-        if (argc > 1) {
-            path = argv[1];
-        } else if (!std::filesystem::exists(path)) {
-            path = "../assets/ebike_config.txt";  // when started from the build folder
-        }
+        const std::string path = argc > 1 ? argv[1] : "assets/ebike_config.txt";
 
         const Config config(path);
         std::cout << config << "\n\n";
