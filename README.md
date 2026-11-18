@@ -1,6 +1,6 @@
 # MiniRTOS pentru Raspberry Pi Pico 2
 
-Simulare simplă a unui RTOS pentru un eBike. Include un scheduler cu priorități, task-uri periodice modelare fizică a bicicletei. Configurare din `assets/ebike_config.txt`.
+Simulare simplă a unui RTOS pentru un eBike. Include un scheduler cu priorități, task-uri periodice modelare fizică a bicicletei. Configurare din `assets/ebike_config.txt`. Pentru o simulare in care task-urile dau miss la deadline paseaza ca input "assets/overload.txt".
 
 ### Folosiți template-ul corespunzător grupei voastre!
 

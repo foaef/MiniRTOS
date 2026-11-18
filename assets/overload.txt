@@ -1,0 +1,45 @@
+# MiniRTOS e-bike configuration. Times are in ticks, 1 tick = 1 ms.
+
+sim.duration_ms = 22000
+trace.capacity = 40
+ride.file = assets/ride.csv
+
+# bike (used only by the simulator)
+bike.mass_kg = 105
+bike.rolling_resistance = 0.006
+bike.drag_area_m2 = 0.5
+bike.brake_decel_ms2 = 2.5
+bike.initial_speed_kmh = 0
+motor.rated_power_w = 250
+
+# battery: 13 cells in series (48 V nominal)
+battery.cells = 13
+battery.cell_empty_v = 3.1
+battery.cell_full_v = 4.2
+battery.capacity_ah = 14
+battery.initial_charge = 0.85
+battery.low_percent = 20
+battery.cutoff_cell_v = 3.2
+battery.internal_resistance_ohm = 0.15
+
+# hall throttle: signal voltage at rest and fully twisted
+throttle.min_v = 0.8
+throttle.max_v = 4.2
+
+# firmware settings
+sensor.filter = 0.5
+sensor.max_speed_step_kmh = 2
+assist.max_power_w = 250
+assist.cutoff_kmh = 25
+assist.fade_kmh = 3
+assist.min_cadence_rpm = 30
+assist.walk_assist_kmh = 6
+assist.ramp_w = 10
+assist.low_battery_factor = 0.5
+
+# tasks: name type priority period wcet deadline
+# every task needs its own name and priority; higher number = more important
+task brake    brake    4    5  1    5
+task sensors  sensors  3   10  1    8
+task assist   assist   2   20  2   15
+task battery  battery  9  100 60  100
