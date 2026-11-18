@@ -19,6 +19,8 @@ battery.cell_full_v = 4.2
 battery.capacity_ah = 14
 battery.initial_charge = 0.85
 battery.low_percent = 20
+battery.cutoff_cell_v = 3.2
+battery.internal_resistance_ohm = 0.15
 
 # hall throttle: signal voltage at rest and fully twisted
 throttle.min_v = 0.8
