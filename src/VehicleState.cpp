@@ -34,7 +34,7 @@ std::ostream& operator<<(std::ostream& os, const VehicleState& state) {
     os << "VehicleState{" << std::fixed << std::setprecision(1) << state.speedKmh_ << " km/h, throttle "
        << state.throttle_ << ", pedalling " << state.cadenceRpm_ << " rpm, " << (state.braking_ ? "braking" : "not braking") << ", battery "
        << state.chargePercent_ << "%" << (state.lowBattery_ ? " (LOW)" : "") << ", motor " << state.motorPowerW_
-       << " W, " << state.brakePresses_ << " brake presses, sensors "
-       << (state.fault_.empty() ? "ok" : "FAULT: " + state.fault_) << "}";
+       << " W, " << state.brakePresses_ << " brake presses, "
+       << (state.fault_.empty() ? "no faults" : "FAULT: " + state.fault_) << "}";
     return os;
 }

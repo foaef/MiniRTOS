@@ -28,12 +28,13 @@ SimHal::SimHal(const Config& config)
       cellEmptyV_(config.number("battery.cell_empty_v")),
       cellFullV_(config.number("battery.cell_full_v")),
       capacityAh_(config.number("battery.capacity_ah")),
+      internalResistanceOhm_(config.number("battery.internal_resistance_ohm")),
       throttleMinV_(config.number("throttle.min_v")),
       throttleMaxV_(config.number("throttle.max_v")),
       chargeAh_(config.number("battery.capacity_ah") * config.number("battery.initial_charge")),
       speedMs_(config.number("bike.initial_speed_kmh") / KMH_PER_MS) {
     if (massKg_ <= 0 || brakeDecelMs2_ <= 0 || ratedPowerW_ <= 0 || cells_ == 0 || capacityAh_ <= 0 ||
-        cellFullV_ <= cellEmptyV_ || throttleMinV_ < 0 || throttleMaxV_ <= throttleMinV_ || chargeAh_ < 0 || chargeAh_ > capacityAh_ || speedMs_ < 0) {
+        cellFullV_ <= cellEmptyV_ || internalResistanceOhm_ < 0 || throttleMinV_ < 0 || throttleMaxV_ <= throttleMinV_ || chargeAh_ < 0 || chargeAh_ > capacityAh_ || speedMs_ < 0) {
         throw ConfigError("bike or battery values are out of range");
     }
 }
@@ -64,7 +65,7 @@ void SimHal::step(int nowMs) {
     }
     speedMs_ = std::max(0.0, speedMs_ + acceleration * SECONDS_PER_TICK);
 
-    const double currentA = motorPowerW_ / packVoltage();
+    const double currentA = motorPowerW_ / openCircuitVoltage();
     chargeAh_ = std::max(0.0, chargeAh_ - currentA * SECONDS_PER_TICK / SECONDS_PER_HOUR);
     motorEnergyWh_ += motorPowerW_ * SECONDS_PER_TICK / SECONDS_PER_HOUR;
     distanceKm_ += speedMs_ * SECONDS_PER_TICK / 1000;
@@ -85,9 +86,16 @@ double SimHal::throttleVoltage() const {
     return throttleMinV_ + throttle_ * (throttleMaxV_ - throttleMinV_);
 }
 
-double SimHal::packVoltage() const {
+double SimHal::openCircuitVoltage() const {
     const double cellVoltage = cellEmptyV_ + (cellFullV_ - cellEmptyV_) * (chargeAh_ / capacityAh_);
     return cellVoltage * cells_;
+}
+
+// What the voltage sensor sees: the open-circuit voltage minus the drop on the
+// pack's internal resistance (U = I * R) while the motor draws current.
+double SimHal::packVoltage() const {
+    const double currentA = motorPowerW_ / openCircuitVoltage();
+    return openCircuitVoltage() - currentA * internalResistanceOhm_;
 }
 
 void SimHal::setMotorPower(double watts) {

@@ -19,6 +19,7 @@ class SimHal final : public Hal {
     double cellEmptyV_;
     double cellFullV_;
     double capacityAh_;
+    double internalResistanceOhm_;
     double throttleMinV_;
     double throttleMaxV_;
 
@@ -38,6 +39,9 @@ class SimHal final : public Hal {
     int worstUnsafeRun_ = 0;  // longest such run: the worst brake reaction time
 
     void printStatus(std::ostream& os) const override;
+
+    // Voltage with no current flowing; it only depends on how charged the pack is.
+    double openCircuitVoltage() const;
 
 public:
     explicit SimHal(const Config& config);

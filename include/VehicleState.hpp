@@ -4,8 +4,9 @@
 #include <string>
 
 // Data the tasks share: each value is written by one task and read by the others.
-//   SensorTask  -> speed, throttle      BrakeTask   -> braking
-//   BatteryTask -> charge, low battery  AssistTask  -> motor power
+//   SensorTask  -> speed, throttle, cadence     BrakeTask  -> braking
+//   BatteryTask -> charge, low battery          AssistTask -> motor power
+//   SensorTask and BatteryTask can also report a fault, which keeps the motor off.
 class VehicleState {
     double speedKmh_;
     double throttle_ = 0;
@@ -32,6 +33,7 @@ public:
     bool hasFault() const { return !fault_.empty(); }
     bool braking() const { return braking_; }
     bool lowBattery() const { return lowBattery_; }
+    double motorPowerW() const { return motorPowerW_; }
 
     friend std::ostream& operator<<(std::ostream& os, const VehicleState& state);
 };
